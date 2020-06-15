@@ -1,6 +1,6 @@
 const { ApolloServer, makeExecutableSchema } = require('apollo-server-express');
 const { importSchema } = require('graphql-import');
-const { resolvers } = require('./resolvers');
+const resolvers = require('./resolvers');
 const logger = require('./utils/logger');
 
 const schema = makeExecutableSchema({

@@ -1,3 +1,5 @@
+scalar Email
+
 type Query {
   user(id: ID!): User!
   users(skip: Int = 0, limit: Int = 10): [User]

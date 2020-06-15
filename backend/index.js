@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { server, logger } = require('./lib/server');
+const mongoose = require('./lib/utils/db');
 
 const { URL, PORT } = process.env;
 
@@ -21,12 +22,15 @@ server.applyMiddleware({
 
 const graphQLServer = httpServer.listen({ port: PORT }, () => {
   logger.info(`Ruvod graphql http://localhost:${PORT}${server.graphqlPath}`);
+  mongoose.connection
+    .once('open', () => logger.info('MongoDB is started'))
+    .on('error', (err) => logger.error(err));
 });
 
 const stop = () =>
   new Promise((resolve) => {
     graphQLServer.close(() => {
-      logger.info('CRAFTFAME API');
+      logger.info('Ruvod graphql stop');
       resolve();
     });
   });

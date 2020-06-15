@@ -18,11 +18,25 @@
     "winston": "^3.2.1"
   },
   "devDependencies": {
+    "cross-env": "^7.0.2",
     "eslint": "^7.2.0",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-import": "^2.21.2",
     "eslint-plugin-prettier": "^3.1.4",
+    "nodemon": "^2.0.4",
     "prettier": "^2.0.5"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "start:dev": "cross-env NODE_ENV=development nodemon --trace-warnings index.js",
+    "start:prod": "cross-env NODE_ENV=production node index.js",
+    "lint:eslint": "eslint --ignore-path .gitignore --ignore-path .eslintignore",
+    "lint:eslint:fix": "eslint --ignore-path .gitignore --ignore-path .eslintignore --fix",
+    "lint:js": "npm run lint:eslint -- . ",
+    "lint:js:fix": "npm run lint:eslint:fix -- ."
+  },
+  "engines": {
+    "node": ">=12.0.0"
   }
 }
