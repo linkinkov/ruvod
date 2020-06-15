@@ -5,5 +5,5 @@
   "semi": true,
   "singleQuote": true,
   "trailingComma": "all",
-  "endOfLine":"auto"
+  "endOfLine":"crlf"
 }

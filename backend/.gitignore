@@ -1,6 +1,5 @@
 node_modules
 .export
-.env
 combined.log
 error.log
 /prisma/Studio/**
