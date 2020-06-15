@@ -1,0 +1,11 @@
+build/
+public/
+config/
+node_modules/
+scripts/
+config/
+PSD/
+public/
+package-lock.json
+yarn.lock
+package.json
