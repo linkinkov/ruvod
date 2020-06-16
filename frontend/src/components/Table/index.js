@@ -35,6 +35,16 @@ const DELETE_USER = gql`
   }
 `;
 
+const UPDATE_USER = gql`
+  mutation updateUser($id: ID!, $input: UpdateUserInput!) {
+    updateUser(id: $id, input: $input) {
+      id
+      name
+      email
+    }
+  }
+`;
+
 const Table = () => {
   const { loading, error, data } = useQuery(USERS);
   const [addUser] = useMutation(ADD_USER, {
@@ -57,6 +67,7 @@ const Table = () => {
     },
   });
 
+  const [updateUser] = useMutation(UPDATE_USER);
 
   const [users, setUsers] = useState([]);
 
@@ -124,11 +135,28 @@ const Table = () => {
             }),
           onRowUpdate: (newData, oldData) =>
             new Promise((resolve, reject) => {
-              setTimeout(() => {
-                console.log(newData);
-
-                resolve();
-              }, 1000);
+              const { name, email } = newData;
+              updateUser({
+                variables: {
+                  id: oldData.id,
+                  input: {
+                    name,
+                    email,
+                  },
+                },
+              })
+                .then(() => {
+                  resolve();
+                })
+                .catch(err => {
+                  // inside error we can check message, but validation not return from server
+                  // console.log(err);
+                  setAlert({
+                    open: true,
+                    message: 'Ошибка валидации, повторите запрос',
+                  });
+                  reject();
+                });
             }),
           onRowDelete: oldData =>
             new Promise((resolve, reject) => {
