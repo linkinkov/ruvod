@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import gql from 'graphql-tag';
 import { useQuery, useMutation } from '@apollo/react-hooks';
 import MaterialTable from 'material-table';
-import Alert from '@material-ui/lab/Alert';
+import Snackbar from '@material-ui/core/Snackbar';
+import Fade from '@material-ui/core/Fade';
 
 const USERS = gql`
   query {
@@ -24,6 +25,16 @@ const ADD_USER = gql`
   }
 `;
 
+const DELETE_USER = gql`
+  mutation deleteUser($id: ID!) {
+    deleteUser(id: $id) {
+      id
+      name
+      email
+    }
+  }
+`;
+
 const Table = () => {
   const { loading, error, data } = useQuery(USERS);
   const [addUser] = useMutation(ADD_USER, {
@@ -35,6 +46,18 @@ const Table = () => {
       });
     },
   });
+
+  const [removeUser] = useMutation(DELETE_USER, {
+    update(cache, { data: { deleteUser } }) {
+      const { users } = cache.readQuery({ query: USERS });
+      cache.writeQuery({
+        query: USERS,
+        data: { users: users.filter(user => user.id !== deleteUser.id) },
+      });
+    },
+  });
+
+
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
@@ -42,49 +65,94 @@ const Table = () => {
   }, [data]);
   // TODO добавить мутации и не забыть разделить handler, а то каша
 
-  return (
-    <MaterialTable
-      title="Список пользователей"
-      columns={[
-        {
-          title: 'Имя',
-          field: 'name',
-        },
-        {
-          title: 'Email',
-          field: 'email',
-        },
-      ]}
-      data={users}
-      isLoading={loading}
-      editable={{
-        onRowAdd: newData =>
-          new Promise((resolve, reject) => {
-            addUser({
-              variables: {
-                input: {
-                  ...newData,
-                },
-              },
-            })
-              .then(() => {
-                resolve();
-              })
-              .catch(err => {
-                console.log(err);
-                reject();
-              });
-          }),
-        onRowUpdate: (newData, oldData) =>
-          new Promise((resolve, reject) => {
-            setTimeout(() => {
-              console.log(newData);
+  const [alert, setAlert] = React.useState({
+    open: false,
+    message: 'Ошибка валидации, повторите запрос',
+  });
 
-              resolve();
-            }, 1000);
-          }),
-      }}
-    />
+  const handleClose = () => {
+    setAlert({
+      open: false,
+    });
+  };
+
+  return (
+    <>
+      <Snackbar
+        open={alert.open}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        onClose={handleClose}
+        TransitionComponent={Fade}
+        message={alert.message}
+      />
+      <MaterialTable
+        title="Список пользователей"
+        columns={[
+          {
+            title: 'Имя',
+            field: 'name',
+          },
+          {
+            title: 'Email',
+            field: 'email',
+          },
+        ]}
+        data={users}
+        isLoading={loading}
+        editable={{
+          onRowAdd: newData =>
+            new Promise((resolve, reject) => {
+              addUser({
+                variables: {
+                  input: {
+                    ...newData,
+                  },
+                },
+              })
+                .then(() => {
+                  resolve();
+                })
+                .catch(err => {
+                  // inside error we can check message, but validation not return from server
+                  // console.log(err);
+                  setAlert({
+                    open: true,
+                    message: 'Ошибка валидации, повторите запрос',
+                  });
+                  reject();
+                });
+            }),
+          onRowUpdate: (newData, oldData) =>
+            new Promise((resolve, reject) => {
+              setTimeout(() => {
+                console.log(newData);
+
+                resolve();
+              }, 1000);
+            }),
+          onRowDelete: oldData =>
+            new Promise((resolve, reject) => {
+              removeUser({
+                variables: {
+                  id: oldData.id,
+                },
+              })
+                .then(() => {
+                  resolve();
+                })
+                .catch(err => {
+                  // inside error we can check message, but validation not return from server
+                  // console.log(err);
+                  setAlert({
+                    open: true,
+                    message: 'Ошибка валидации, повторите запрос',
+                  });
+                  reject();
+                });
+            }),
+        }}
+      />
+    </>
   );
 };
 
