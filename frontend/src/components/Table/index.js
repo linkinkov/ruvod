@@ -3,10 +3,11 @@ import gql from 'graphql-tag';
 import { useQuery, useMutation } from '@apollo/react-hooks';
 import MaterialTable from 'material-table';
 import Snackbar from '@material-ui/core/Snackbar';
+import Alert from '@material-ui/lab/Alert';
 import Fade from '@material-ui/core/Fade';
 
 const USERS = gql`
-  query {
+  query users {
     users {
       id
       name
@@ -46,6 +47,12 @@ const UPDATE_USER = gql`
 `;
 
 const Table = () => {
+  const [usersData, setUsers] = useState([]);
+  const [alert, setAlert] = React.useState({
+    open: false,
+    message: 'Ошибка валидации, повторите запрос',
+  });
+
   const { loading, error, data } = useQuery(USERS);
   const [addUser] = useMutation(ADD_USER, {
     update(cache, { data: { createUser } }) {
@@ -69,17 +76,9 @@ const Table = () => {
 
   const [updateUser] = useMutation(UPDATE_USER);
 
-  const [users, setUsers] = useState([]);
-
   useEffect(() => {
     setUsers(data?.users);
   }, [data]);
-  // TODO добавить мутации и не забыть разделить handler, а то каша
-
-  const [alert, setAlert] = React.useState({
-    open: false,
-    message: 'Ошибка валидации, повторите запрос',
-  });
 
   const handleClose = () => {
     setAlert({
@@ -96,6 +95,11 @@ const Table = () => {
         TransitionComponent={Fade}
         message={alert.message}
       />
+      {error && (
+        <Alert severity="error">
+          Ошибка загрузки данных, возможно backend отключен
+        </Alert>
+      )}
       <MaterialTable
         title="Список пользователей"
         columns={[
@@ -108,7 +112,26 @@ const Table = () => {
             field: 'email',
           },
         ]}
-        data={users}
+        localization={{
+          pagination: {
+            labelDisplayedRows: '{from}-{to} из {count}',
+          },
+          header: {
+            actions: 'Действия',
+          },
+          body: {
+            emptyDataSourceMessage: 'Нет данных для отображения',
+            addTooltip: 'Добавить',
+            deleteTooltip: 'Удалить',
+            editTooltip: 'Редактировать',
+            editRow: {
+              deleteText: 'Вы уверены, что хотите удалить?',
+              cancelTooltip: 'Отмена',
+              saveTooltip: 'Сохранить',
+            },
+          },
+        }}
+        data={usersData}
         isLoading={loading}
         editable={{
           onRowAdd: newData =>
@@ -123,7 +146,7 @@ const Table = () => {
                 .then(() => {
                   resolve();
                 })
-                .catch(err => {
+                .catch(() => {
                   // inside error we can check message, but validation not return from server
                   // console.log(err);
                   setAlert({
@@ -148,7 +171,7 @@ const Table = () => {
                 .then(() => {
                   resolve();
                 })
-                .catch(err => {
+                .catch(() => {
                   // inside error we can check message, but validation not return from server
                   // console.log(err);
                   setAlert({
@@ -168,7 +191,7 @@ const Table = () => {
                 .then(() => {
                   resolve();
                 })
-                .catch(err => {
+                .catch(() => {
                   // inside error we can check message, but validation not return from server
                   // console.log(err);
                   setAlert({
